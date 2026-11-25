@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow | Manage your day</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">✓</span><span>taskflow</span></div>
+        <p class="nav-label">WORKSPACE</p>
+        <a class="nav-link active" th:href="@{/}"><span>▦</span> My tasks</a>
+        <div class="sidebar-note">
+            <div class="note-icon">✦</div>
+            <strong>Small steps, big progress.</strong>
+            <p>Keep your focus on what matters today.</p>
+        </div>
+        <div class="sidebar-bottom"><span class="online-dot"></span> TaskFlow workspace</div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div><p class="eyebrow">YOUR WORKSPACE</p><h1>My tasks</h1></div>
+            <div class="today-chip">● <span th:text="${#temporals.format(#temporals.createNow(), 'EEE, dd MMM yyyy')}">Today</span></div>
+        </header>
+
+        <div th:if="${message}" class="alert success" th:text="${message}"></div>
+        <div th:if="${error}" class="alert error" th:text="${error}"></div>
+
+        <section class="welcome">
+            <div><p class="eyebrow light">A CLEAR PLAN STARTS HERE</p>
+                <h2>Make today count.</h2>
+                <p>Organize your work, track your progress, and get things done.</p>
+            </div>
+            <div class="welcome-art">✦</div>
+        </section>
+
+        <section class="stats">
+            <article class="stat-card"><div class="stat-top"><span>Total tasks</span><span class="stat-icon purple">▤</span></div>
+                <strong th:text="${totalCount}">0</strong><small>All your tasks</small></article>
+            <article class="stat-card"><div class="stat-top"><span>Pending</span><span class="stat-icon orange">◷</span></div>
+                <strong th:text="${pendingCount}">0</strong><small>Still in progress</small></article>
+            <article class="stat-card"><div class="stat-top"><span>Completed</span><span class="stat-icon green">✓</span></div>
+                <strong th:text="${completedCount}">0</strong><small>Tasks finished</small></article>
+        </section>
+
+        <section class="task-layout">
+            <div class="task-panel">
+                <div class="section-heading">
+                    <div><h3>Your task list</h3><p>Everything you need to focus on.</p></div>
+                    <span class="count-pill" th:text="${#lists.size(tasks)} + ' tasks'">0 tasks</span>
+                </div>
+                <nav class="filters">
+                    <a th:classappend="${activeFilter == 'ALL'} ? ' selected'" th:href="@{/}">All</a>
+                    <a th:classappend="${activeFilter == 'PENDING'} ? ' selected'" th:href="@{/(status='PENDING')}">Pending</a>
+                    <a th:classappend="${activeFilter == 'COMPLETED'} ? ' selected'" th:href="@{/(status='COMPLETED')}">Completed</a>
+                </nav>
+
+                <div th:if="${#lists.isEmpty(tasks)}" class="empty-state">
+                    <div>✧</div><strong>No tasks here yet</strong><p>Add a task or choose another filter.</p>
+                </div>
+
+                <article class="task-row" th:each="item : ${tasks}">
+                    <form th:action="@{/tasks/{id}/toggle(id=${item.id})}" method="post">
+                        <button class="check-button" th:classappend="${item.status.name() == 'COMPLETED'} ? ' checked'" type="submit"
+                                th:attr="aria-label=${'Toggle ' + item.title}">✓</button>
+                    </form>
+                    <div class="task-copy">
+                        <strong th:classappend="${item.status.name() == 'COMPLETED'} ? ' done'" th:text="${item.title}">Task title</strong>
+                        <p th:text="${item.description != null and !#strings.isEmpty(item.description)} ? item.description : 'No description added'">Description</p>
+                    </div>
+                    <span class="status" th:classappend="${item.status.name() == 'COMPLETED'} ? ' finished'"
+                          th:text="${item.status.name() == 'COMPLETED'} ? 'Completed' : 'Pending'">Pending</span>
+                    <details class="task-menu">
+                        <summary aria-label="Task actions">•••</summary>
+                        <div class="menu-content">
+                            <form th:action="@{/tasks/{id}/delete(id=${item.id})}" method="post">
+                                <button type="submit" class="delete-action">Delete task</button>
+                            </form>
+                            <form th:action="@{/tasks/{id}/edit(id=${item.id})}" method="post" class="edit-form">
+                                <input name="title" required maxlength="100" th:value="${item.title}" aria-label="Edit title">
+                                <input name="description" maxlength="500" th:value="${item.description}" aria-label="Edit description">
+                                <button type="submit">Save changes</button>
+                            </form>
+                        </div>
+                    </details>
+                </article>
+            </div>
+
+            <aside class="add-panel">
+                <div class="add-icon">＋</div>
+                <h3>Add a new task</h3>
+                <p>Capture it now, take care of it later.</p>
+                <form th:action="@{/tasks}" th:object="${task}" method="post">
+                    <label for="title">Task title</label>
+                    <input id="title" type="text" th:field="*{title}" placeholder="e.g. Review deployment plan" maxlength="100" required>
+                    <label for="description">Description <span>(optional)</span></label>
+                    <textarea id="description" th:field="*{description}" rows="4" placeholder="Add a few details..." maxlength="500"></textarea>
+                    <button class="primary-button" type="submit">＋ Add task</button>
+                </form>
+                <div class="tip"><span>✦</span><p><strong>Quick tip</strong><br>Break large goals into smaller tasks to make progress easier.</p></div>
+            </aside>
+        </section>
+        <footer>TaskFlow <span>·</span> A little progress every day.</footer>
+    </main>
+</div>
+</body>
+</html>
